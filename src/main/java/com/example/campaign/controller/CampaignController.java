@@ -75,11 +75,13 @@ public class CampaignController {
         Collections.shuffle(users);
 
         List<User> winners = users.stream()
-                .limit(10)
+                .limit(Math.min(10, users.size()))
                 .toList();
 
         Map<String, Object> result = new HashMap<>();
-        result.put("winners", winners.size());
+        result.put("count", winners.size());
+        result.put("winners", winners);
+
         return result;
     }
 

@@ -88,6 +88,15 @@
             color: #777;
             font-size: 0.9rem;
         }
+
+        .winner-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .winner-list li {
+            margin-bottom: 6px;
+        }
     </style>
 </head>
 <body>
@@ -117,6 +126,8 @@
         <button class="btn-draw" id="drawBtn" onclick="drawWinners()">
             抽選を実行する
         </button>
+
+        <div id="drawResult" class="mt-4"></div>
     </div>
 
     <div class="filter-box">
@@ -226,6 +237,40 @@
         tableStatus.innerText = statusText;
     }
 
+    function renderWinners(winners) {
+        const resultBox = document.getElementById("drawResult");
+
+        if (!winners || winners.length === 0) {
+            resultBox.innerHTML = `
+                <div class="alert alert-warning mt-3 mb-0">
+                    対象ユーザーがいないため、抽選結果はありません。
+                </div>
+            `;
+            return;
+        }
+
+        let html = `
+            <div class="alert alert-info mt-3 mb-0 text-left">
+                <h5 class="mb-3">当選者一覧</h5>
+                <ul class="winner-list">
+        `;
+
+        winners.forEach(user => {
+            html += `
+                <li>
+                    ${escapeHtml(user.name)}（${escapeHtml(user.area)} / ${escapeHtml(user.email)}）
+                </li>
+            `;
+        });
+
+        html += `
+                </ul>
+            </div>
+        `;
+
+        resultBox.innerHTML = html;
+    }
+
     function loadStats() {
         hideMessage();
 
@@ -289,6 +334,7 @@
         hideMessage();
 
         const btn = document.getElementById("drawBtn");
+        const resultBox = document.getElementById("drawResult");
 
         if (!confirm("抽選を実行しますか？")) {
             return;
@@ -296,6 +342,7 @@
 
         btn.disabled = true;
         btn.innerText = "抽選中...";
+        resultBox.innerHTML = "";
 
         fetch(`${API}/draw`, {
             method: "POST"
@@ -307,7 +354,8 @@
                 return res.json();
             })
             .then(res => {
-                showMessage(`抽選が完了しました。当選者数: ${res.winners}名`, "success");
+                showMessage(`抽選が完了しました。当選者数: ${res.count}名`, "success");
+                renderWinners(res.winners);
                 btn.disabled = false;
                 btn.innerText = "抽選を実行する";
                 loadStats();
