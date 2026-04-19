@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>応募フォーム</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background: #f4f7f6;
+            padding-top: 50px;
+        }
+        .card {
+            max-width: 450px;
+            margin: auto;
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .btn-primary {
+            border-radius: 25px;
+            padding: 12px;
+            font-weight: bold;
+            width: 100%;
+        }
+        .invalid-feedback {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card p-4">
+    <h3 class="text-center mb-4">応募フォーム</h3>
+
+    <form id="f" novalidate>
+        <div class="form-group">
+            <label>氏名</label>
+            <input type="text" name="name" class="form-control" required>
+            <div class="invalid-feedback" id="error-name"></div>
+        </div>
+
+        <div class="form-group">
+            <label>メール</label>
+            <input type="email" name="email" class="form-control" required>
+            <div class="invalid-feedback" id="error-email"></div>
+        </div>
+
+        <div class="form-group">
+            <label>電話番号</label>
+            <input type="tel" name="phone" class="form-control" required>
+            <div class="invalid-feedback" id="error-phone"></div>
+        </div>
+
+        <div class="form-group">
+            <label>地区</label>
+            <select name="area" class="form-control" required>
+                <option value="">選択してください</option>
+                <option value="渋谷区">渋谷区</option>
+                <option value="新宿区">新宿区</option>
+                <option value="豊島区">豊島区</option>
+                <option value="中野区">中野区</option>
+                <option value="大田区">大田区</option>
+                <option value="練馬区">練馬区</option>
+                <option value="世田谷区">世田谷区</option>
+                <option value="北区">北区</option>
+            </select>
+            <div class="invalid-feedback" id="error-area"></div>
+        </div>
+
+        <div class="form-group">
+            <label>年齢</label>
+            <input type="number" name="age" class="form-control" required min="0">
+            <div class="invalid-feedback" id="error-age"></div>
+        </div>
+
+        <button type="button" class="btn btn-primary" onclick="sub(this)">
+            登録する
+        </button>
+    </form>
+
+    <div id="m" class="text-center mt-3" style="display:none">
+        <h4 class="text-success">登録が完了しました！🎉</h4>
+    </div>
+</div>
+
+<script>
+    const API = "/api";
+
+    function clearErrors() {
+        const fields = ["name", "email", "phone", "area", "age"];
+
+        fields.forEach(field => {
+            const input = document.querySelector(`[name="${field}"]`);
+            const errorBox = document.getElementById(`error-${field}`);
+
+            input.classList.remove("is-invalid");
+            errorBox.innerText = "";
+        });
+    }
+
+    function showFieldError(field, message) {
+        const input = document.querySelector(`[name="${field}"]`);
+        const errorBox = document.getElementById(`error-${field}`);
+
+        if (input && errorBox) {
+            input.classList.add("is-invalid");
+            errorBox.innerText = message;
+        }
+    }
+
+    function validateFrontend(f) {
+        let valid = true;
+        clearErrors();
+
+        if (!f.name.value.trim()) {
+            showFieldError("name", "氏名を入力してください");
+            valid = false;
+        }
+
+        if (!f.email.value.trim()) {
+            showFieldError("email", "メールアドレスを入力してください");
+            valid = false;
+        } else {
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(f.email.value.trim())) {
+                showFieldError("email", "正しいメールアドレスを入力してください");
+                valid = false;
+            }
+        }
+
+        if (!f.phone.value.trim()) {
+            showFieldError("phone", "電話番号を入力してください");
+            valid = false;
+        }
+
+        if (!f.area.value.trim()) {
+            showFieldError("area", "地区を選択してください");
+            valid = false;
+        }
+
+        if (!f.age.value.trim()) {
+            showFieldError("age", "年齢を入力してください");
+            valid = false;
+        } else if (parseInt(f.age.value) < 0) {
+            showFieldError("age", "0以上で入力してください");
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    function applyBackendErrors(errors) {
+        clearErrors();
+
+        errors.forEach(error => {
+            if (error.startsWith("氏名")) {
+                showFieldError("name", error);
+            } else if (error.startsWith("メール")) {
+                showFieldError("email", error);
+            } else if (error.startsWith("電話番号")) {
+                showFieldError("phone", error);
+            } else if (error.startsWith("地区")) {
+                showFieldError("area", error);
+            } else if (error.startsWith("年齢")) {
+                showFieldError("age", error);
+            }
+        });
+    }
+
+    function sub(btn) {
+        const f = document.getElementById("f");
+
+        if (!validateFrontend(f)) {
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "送信中...";
+
+        fetch(`${API}/register`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: f.name.value,
+                email: f.email.value,
+                phone: f.phone.value,
+                area: f.area.value,
+                age: parseInt(f.age.value)
+            })
+        })
+        .then(async res => {
+            const contentType = res.headers.get("content-type");
+
+            if (!res.ok) {
+                if (contentType && contentType.includes("application/json")) {
+                    const err = await res.json();
+                    throw err;
+                } else {
+                    throw { message: "エラーが発生しました" };
+                }
+            }
+
+            return res.text();
+        })
+        .then(() => {
+            clearErrors();
+            f.style.display = "none";
+            document.getElementById("m").style.display = "block";
+        })
+        .catch(err => {
+            if (err.errors && Array.isArray(err.errors)) {
+                applyBackendErrors(err.errors);
+            } else {
+                alert(err.message || "エラーが発生しました");
+            }
+
+            btn.disabled = false;
+            btn.innerText = "登録する";
+        });
+    }
+</script>
+
+</body>
+</html>
