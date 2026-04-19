@@ -150,4 +150,15 @@ Spring Boot を起動します。
 * Webデプロイ（Railway / Render）
 * ポートフォリオとして活用
 
+
+## 🌐 デモ
+- トップページ  
+  https://campaign-management-system-production.up.railway.app/
+
+- 管理画面  
+  https://campaign-management-system-production.up.railway.app/admin
+
+- 応募フォーム  
+  https://campaign-management-system-production.up.railway.app/register
+
 ---
