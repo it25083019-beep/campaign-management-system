@@ -1,15 +1,18 @@
 package com.example.campaign.controller;
 
+import com.example.campaign.model.DrawHistory;
 import com.example.campaign.model.User;
+import com.example.campaign.repository.DrawHistoryRepository;
 import com.example.campaign.repository.UserRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @CrossOrigin(origins = "*")
@@ -20,8 +23,11 @@ public class CampaignController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private DrawHistoryRepository drawHistoryRepository;
+
     @PostMapping("/register")
-    public String register(@RequestBody @jakarta.validation.Valid User user) {
+    public String register(@RequestBody @Valid User user) {
         userRepository.save(user);
         return "Saved";
     }
@@ -78,11 +84,69 @@ public class CampaignController {
                 .limit(Math.min(10, users.size()))
                 .toList();
 
+        for (User u : users) {
+            u.setWinner(false);
+            u.setMailSent(false);
+        }
+
+        for (User w : winners) {
+            w.setWinner(true);
+        }
+
+        userRepository.saveAll(users);
+
+        DrawHistory history = new DrawHistory();
+        history.setDrawTime(LocalDateTime.now());
+        history.setTotalUsers(users.size());
+        history.setWinnersCount(winners.size());
+        drawHistoryRepository.save(history);
+
         Map<String, Object> result = new HashMap<>();
         result.put("count", winners.size());
         result.put("winners", winners);
 
         return result;
+    }
+
+    @GetMapping("/winners")
+    public List<User> getWinners() {
+        return userRepository.findAll()
+                .stream()
+                .filter(User::isWinner)
+                .toList();
+    }
+
+    @PostMapping("/send-mails")
+    public Map<String, Object> sendMails() {
+        List<User> winners = userRepository.findAll()
+                .stream()
+                .filter(User::isWinner)
+                .toList();
+
+        int success = 0;
+
+        for (User u : winners) {
+            System.out.println("Sending winner mail to: " + u.getEmail());
+            u.setMailSent(true);
+            success++;
+        }
+
+        userRepository.saveAll(winners);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", success);
+        result.put("total", winners.size());
+        result.put("message", "送信処理が完了しました");
+
+        return result;
+    }
+
+    @GetMapping("/draw-history")
+    public List<DrawHistory> getDrawHistory() {
+        return drawHistoryRepository.findAll()
+                .stream()
+                .sorted((a, b) -> b.getDrawTime().compareTo(a.getDrawTime()))
+                .toList();
     }
 
     @DeleteMapping("/users/{id}")
@@ -105,12 +169,8 @@ public class CampaignController {
         List<User> users = userRepository.findAll();
 
         StringBuilder sb = new StringBuilder();
-
-        // UTF-8 BOM để Excel mở tiếng Nhật không bị lỗi font
         sb.append("\uFEFF");
-
-        // header
-        sb.append("id,name,email,phone,area,age\n");
+        sb.append("id,name,email,phone,area,age,isWinner,mailSent\n");
 
         for (User u : users) {
             sb.append(csvEscape(String.valueOf(u.getId()))).append(",")
@@ -118,7 +178,9 @@ public class CampaignController {
                     .append(csvEscape(u.getEmail())).append(",")
                     .append(csvEscape(u.getPhone())).append(",")
                     .append(csvEscape(u.getArea())).append(",")
-                    .append(csvEscape(String.valueOf(u.getAge()))).append("\n");
+                    .append(csvEscape(String.valueOf(u.getAge()))).append(",")
+                    .append(csvEscape(String.valueOf(u.isWinner()))).append(",")
+                    .append(csvEscape(String.valueOf(u.isMailSent()))).append("\n");
         }
 
         return ResponseEntity.ok()
