@@ -45,8 +45,12 @@ public class MailService {
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
+        System.out.println("RESEND STATUS: " + response.statusCode());
+        System.out.println("RESEND BODY: " + response.body());
+
         if (response.statusCode() < 200 || response.statusCode() >= 300) {
             throw new RuntimeException("Resend API failed: " + response.statusCode() + " / " + response.body());
+
         }
 
         System.out.println("Resend success: " + response.body());
