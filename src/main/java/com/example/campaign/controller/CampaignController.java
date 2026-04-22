@@ -4,6 +4,7 @@ import com.example.campaign.model.DrawHistory;
 import com.example.campaign.model.User;
 import com.example.campaign.repository.DrawHistoryRepository;
 import com.example.campaign.repository.UserRepository;
+import com.example.campaign.service.MailService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -25,6 +26,9 @@ public class CampaignController {
 
     @Autowired
     private DrawHistoryRepository drawHistoryRepository;
+
+    @Autowired
+    private MailService mailService;
 
     @PostMapping("/register")
     public String register(@RequestBody @Valid User user) {
@@ -118,25 +122,36 @@ public class CampaignController {
 
     @PostMapping("/send-mails")
     public Map<String, Object> sendMails() {
-        List<User> winners = userRepository.findAll()
+        List<User> winnersToSend = userRepository.findAll()
                 .stream()
                 .filter(User::isWinner)
+                .filter(u -> !u.isMailSent())
                 .toList();
 
         int success = 0;
+        int fail = 0;
+        List<String> failedEmails = new ArrayList<>();
 
-        for (User u : winners) {
-            System.out.println("Sending winner mail to: " + u.getEmail());
-            u.setMailSent(true);
-            success++;
+        for (User u : winnersToSend) {
+            try {
+                mailService.sendWinnerMail(u.getEmail(), u.getName());
+                u.setMailSent(true);
+                success++;
+            } catch (Exception e) {
+                fail++;
+                failedEmails.add(u.getEmail());
+                System.out.println("Mail send failed: " + u.getEmail() + " / " + e.getMessage());
+            }
         }
 
-        userRepository.saveAll(winners);
+        userRepository.saveAll(winnersToSend);
 
         Map<String, Object> result = new HashMap<>();
         result.put("success", success);
-        result.put("total", winners.size());
-        result.put("message", "送信処理が完了しました");
+        result.put("fail", fail);
+        result.put("total", winnersToSend.size());
+        result.put("failedEmails", failedEmails);
+        result.put("message", "メール送信処理が完了しました");
 
         return result;
     }
