@@ -133,13 +133,17 @@ public class CampaignController {
 
         for (User u : winnersToSend) {
             try {
+                System.out.println("START sending to: " + u.getEmail());
                 mailService.sendWinnerMail(u.getEmail(), u.getName());
+                System.out.println("SUCCESS sending to: " + u.getEmail());
+
                 u.setMailSent(true);
                 success++;
             } catch (Exception e) {
                 fail++;
                 failedEmails.add(u.getEmail());
-                System.out.println("Mail send failed: " + u.getEmail() + " / " + e.getMessage());
+                System.out.println("FAIL sending to: " + u.getEmail());
+                System.out.println("ERROR: " + e.getMessage());
             }
         }
 
