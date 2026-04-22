@@ -1,10 +1,9 @@
 package com.example.campaign.controller;
-
+import com.example.campaign.service.MailService;
 import com.example.campaign.model.DrawHistory;
 import com.example.campaign.model.User;
 import com.example.campaign.repository.DrawHistoryRepository;
 import com.example.campaign.repository.UserRepository;
-import com.example.campaign.service.MailService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
