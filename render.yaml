@@ -3,7 +3,7 @@ services:
     name: hoang-campaign-management
     runtime: docker
     plan: free
-    healthCheckPath: /health
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: JAVA_TOOL_OPTIONS
-        value: -Xmx400m
+        value: "-XX:MaxRAMPercentage=75.0"
