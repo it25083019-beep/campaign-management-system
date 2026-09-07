@@ -14,16 +14,21 @@ import java.util.Map;
 @Service
 public class MailService {
 
-    @Value("${RESEND_API_KEY}")
+    @Value("${RESEND_API_KEY:}")
     private String resendApiKey;
 
-    @Value("${RESEND_FROM_EMAIL}")
+    @Value("${RESEND_FROM_EMAIL:noreply@example.com}")
     private String fromEmail;
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public void sendWinnerMail(String to, String name) throws Exception {
+        if (resendApiKey == null || resendApiKey.isBlank()) {
+            System.out.println("RESEND_API_KEY is not set; skip sending mail to " + to);
+            return;
+        }
+
         Map<String, Object> body = Map.of(
                 "from", fromEmail,
                 "to", List.of(to),
