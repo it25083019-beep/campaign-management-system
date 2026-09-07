@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: hoang-campaign-management
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: JAVA_TOOL_OPTIONS
+        value: -Xmx400m

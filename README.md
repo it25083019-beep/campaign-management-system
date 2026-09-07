@@ -152,13 +152,23 @@ Spring Boot を起動します。
 
 
 ## 🌐 デモ
-- トップページ  
-  https://campaign-management-system-production.up.railway.app/
 
-- 管理画面  
-  https://campaign-management-system-production.up.railway.app/admin
+- 管理画面: https://hoang-campaign-management.onrender.com/admin
+- 応募フォーム: https://hoang-campaign-management.onrender.com/register
 
-- 応募フォーム  
-  https://campaign-management-system-production.up.railway.app/register
+無料プランのため、初回アクセスは約30秒かかることがあります。
+データはデモ用のH2（メモリ）で、再起動すると初期データに戻ります。
+
+### ローカル起動
+
+```bash
+./mvnw spring-boot:run
+```
+
+- 管理画面: http://localhost:8080/admin
+- 応募フォーム: http://localhost:8080/register
+
+MySQLを使う場合は環境変数 `SPRING_DATASOURCE_URL` / `USERNAME` / `PASSWORD` と
+`SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver` を設定してください。
 
 ---

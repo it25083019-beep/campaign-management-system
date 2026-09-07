@@ -2,6 +2,7 @@ package com.example.campaign.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 public class PageController {
@@ -19,5 +20,11 @@ public class PageController {
     @GetMapping({"/register", "/register/"})
     public String register() {
         return "forward:/register.html";
+    }
+
+    @GetMapping("/health")
+    @ResponseBody
+    public String health() {
+        return "ok";
     }
 }
