@@ -33,4 +33,10 @@ public class User {
 
     @Min(value = 0, message = "0以上で入力してください")
     private int age;
+
+    @Column(nullable = false)
+    private boolean isWinner = false;
+
+    @Column(nullable = false)
+    private boolean mailSent = false;
 }
